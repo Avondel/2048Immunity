@@ -1,11 +1,15 @@
-var score;
+var score=0;
 var playGame=true;
 var img_src=[];
 var boardFull = 0;
 var move = 1;
+var currChild= 0;
+var tableEl;
+var secArr = [];
+
 document.addEventListener("keydown",play2048);
 
-function init(){
+async function init(){
 	score = 0;
 	playGame = true;
 
@@ -20,14 +24,46 @@ function init(){
 	img_src[8] = "img/KillerTCell1.png";
 	img_src[9] = "img/MemoryCell1.png";
 	img_src[10] = "img/Immunity1.png";
-
-	createImage();
-	createImage();
 	
+	createImage();
+	moveImages(notice);
 }
-function play2048(e){
-	var move=1;
+
+function anim(){
+	el = document.getElementById('c3r1').firstChild;
+	container = document.getElementById('c1r1');
+	container2 = document.getElementById('c2r1');
+	container.appendChild(el);
+	el2 = document.getElementById('c3r1').firstChild;
+	container2.appendChild(el2);
+	el.style.left = '200px';
+	el2.style.left = '100px';
+	
+	container.firstChild.style.animation = "moveLeft2 1s forwards";
+	container2.firstChild.style.animation = "moveLeft2 1s forwards";
+	notice(el);
+	container.firstChild.style.animation = "moveDown 1s forwards";
+}
+
+
+function trans(){
+	el = document.getElementById('c3r1').firstChild;
+	container = document.getElementById('c1r1');
+	container2 = document.getElementById('c2r1');
+	container.appendChild(el);
+
+	el.style.left = "200px";
+	el2 = document.getElementById('c3r1').firstChild;
+	//el.style.transition = "left 1s";
+	el.style.left = "0px";
+	//container.appendChild(el);
+	
+
+}
+async function play2048(e){
+	secArr = [];
 	if(playGame){
+		move = 0;
 		if(e.key =="ArrowLeft")
 			arrowLeft();
 		else if(e.key =="ArrowRight")
@@ -36,25 +72,16 @@ function play2048(e){
 			arrowUp();
 		else if(e.key == "ArrowDown")
 			arrowDown();
-		
+		else
+			return;
+
+		moveImages(notice);
 		isEndGame(playGame);
-		/*createImage();
-		boardFull = isBoardFull();
-		if(boardFull){
-			move = gotMove();
-			if(!move){
-				playGame = false;
-				alert("game over");
-			}
-		}*/
-		
-	}	
+	}
 }
 
 function isEndGame(playGame){
-			createImage();
-		boardFull = isBoardFull();
-		if(boardFull){
+		if(isBoardFull()){
 			move = gotMove();
 			if(!move){
 				playGame = false;
@@ -64,160 +91,240 @@ function isEndGame(playGame){
 	
 }
 
-function arrowLeft(){
+async function arrowLeft(){
+	move = 0;
 	for(var row=1; row<=4; row++){
-		for(var col=1; col<=4; col++){
+		secArr = [];
+		//read into secondary array
+		var i = 0;
+		for(var col = 1; col<=4; col++){
 			if(document.getElementById('c'+col+'r'+row).firstChild){
-				currCell = document.getElementById('c'+col+'r'+row);
 				currChild = document.getElementById('c'+col+'r'+row).firstChild;
-				destCell=0;
-				secondCell = 0;
-				moveCurr=0;
-				combo=0;
-				//is it a combo?
-				for(var animStart=col+1; animStart<=4; animStart++){
-					if(document.getElementById('c'+animStart+'r'+row).firstChild){
-						secondCell = document.getElementById('c'+animStart+'r'+row);
-						if(secondCell.firstChild.dataset.index == currChild.dataset.index){
-							combo=1;
-						}
-						break;
-					}
-				}	
-				//Move currChild?
-				for(var animEnd=1; animEnd<col; animEnd++){
-					if(!document.getElementById('c'+animEnd+'r'+row).firstChild){
-						destCell=document.getElementById('c'+animEnd+'r'+row);
-						moveCurr=1;
-						break;
-					}
-				}
-				
-			moveImage(combo, moveCurr, currCell, destCell, secondCell);	
-		}
-		
-		}
-
-	}				
-}
-
-function arrowRight(){
-	for(var row = 4; row>=1; row--){
-		for(var col=4; col>=1; col--){
-			if(document.getElementById('c'+col+'r'+row).firstChild){
-				currCell = document.getElementById('c'+col+'r'+row);
-				currChild = document.getElementById('c'+col+'r'+row).firstChild;
-				moveCurr=0;
-				secondCell=0;
-				destCell=0;
-				combo=0;
-				//is it a combo?
-				for(var animStart=col-1; animStart>=1; animStart--){
-					if(document.getElementById('c'+animStart+'r'+row).firstChild){
-						secondChild=document.getElementById('c'+animStart+'r'+row).firstChild;
-						if(secondChild.dataset.index == currChild.dataset.index){
-							secondCell = document.getElementById('c'+animStart+'r'+row);
-							combo=1;
-						}
-						break;
-					}
-				}	
-				//Move currChild?
-				for(var animEnd=4; animEnd>col; animEnd--){
-					if(!document.getElementById('c'+animEnd+'r'+row).firstChild){
-						destCell=document.getElementById('c'+animEnd+'r'+row);
-						moveCurr=1;
-						break;
-					}
-				}
-				moveImage(combo, moveCurr, currCell, destCell, secondCell);	
+				secArr[i] = currChild;
+				document.getElementById('c'+col+'r'+row).removeChild(currChild);
+				i++;
 			}
 		}
-	}				
-}
+		//find combos
+		findCombos(secArr);
 
-function arrowUp(){
-	for(var col = 1; col<=4; col++){
-		for(var row=1; row<=4; row++){
-			if(document.getElementById('c'+col+'r'+row).firstChild){
-				currCell = document.getElementById('c'+col+'r'+row);
-				currChild = document.getElementById('c'+col+'r'+row).firstChild;
-				moveCurr=0;
-				secondCell=0;
-				destCell=0;
-				combo=0;
+		col = 1;
+		//put back into cells
+		for(var i = 0; i<secArr.length; i++){
+			document.getElementById('c'+col+'r'+row).appendChild(secArr[i]);
+			if(secArr[i].dataset.anim == 'c'){
+				document.getElementById('c'+col+'r'+row).appendChild(secArr[i+1]);
+				i++;
+			}
+			col++;
+		}
 
-				//is it a combo?
-				for(var animStart=row+1; animStart<=4; animStart++){
-					if(document.getElementById('c'+col+'r'+animStart).firstChild){
-						secondChild=document.getElementById('c'+col+'r'+animStart).firstChild;
-						if(secondChild.dataset.index == currChild.dataset.index){
-							secondCell = document.getElementById('c'+col+'r'+animStart);
-							combo=1;
-						}
-						break;
+		//format properly
+		for(var col = 1; col<=4; col++){
+			if(el = document.getElementById('c'+col+'r'+row).firstChild){
+				if(el.dataset.anim == 'l'){
+					dist = el.dataset.x - col;
+					if(dist == 0){
+						el.dataset.anim == '';
+					}
+					else{
+						move = 1;
+						el.style.left = dist*113 +'px';
 					}
 				}
-
-				//Move currChild?
-				for(var animEnd=1; animEnd<row; animEnd++){
-					if(!document.getElementById('c'+col+'r'+animEnd).firstChild){
-						destCell=document.getElementById('c'+col+'r'+animEnd);
-						moveCurr=1;
-						break;
-					}
+				else if(el.dataset.anim == 'c'){
+					move = 1;
+					el2 = el.nextSibling;
+					dist = el2.dataset.x - col;
+					el2.style.left = dist*113 + 'px';
 				}
-				moveImage(combo, moveCurr, currCell, destCell, secondCell);	
 			}
 		}
-	}				
+	}
 }
 
-function arrowDown(){
-	for(var col = 1; col<=4; col++){
-		for(var row=4; row>=1; row--){
+async function arrowRight(){
+	for(var row=1; row<=4; row++){
+	//read into secondary array
+		var i = 0;
+		secArr = [];
+		for(var col = 4; col>=1; col--){
 			if(document.getElementById('c'+col+'r'+row).firstChild){
-				currCell = document.getElementById('c'+col+'r'+row);
 				currChild = document.getElementById('c'+col+'r'+row).firstChild;
-				moveCurr=0;
-				secondCell=0;
-				destCell=0;
-				combo=0;
-				//is it a combo?
-				for(var animStart=row-1; animStart>=1; animStart--){
-					if(document.getElementById('c'+col+'r'+animStart).firstChild){
-						secondChild=document.getElementById('c'+col+'r'+animStart).firstChild;
-						if(secondChild.dataset.index == currChild.dataset.index){
-							secondCell = document.getElementById('c'+col+'r'+animStart);
-							combo=1;
-						}
-						break;
+				secArr[i] = currChild;
+				document.getElementById('c'+col+'r'+row).removeChild(currChild);
+				i++;
+			}
+			
+		}
+		//find combos
+		findCombos(secArr);
+
+		col = 4;
+		//put back into cells
+		for(var i = 0; i<secArr.length; i++){
+			document.getElementById('c'+col+'r'+row).appendChild(secArr[i]);
+			if(secArr[i].dataset.anim == 'c'){
+				document.getElementById('c'+col+'r'+row).appendChild(secArr[i+1]);
+				i++;
+			}
+			col--;
+		}
+
+		//format properly
+		for(var col = 1; col<=4; col++){
+			if(el = document.getElementById('c'+col+'r'+row).firstChild){
+				if(el.dataset.anim == 'l'){
+					dist = el.dataset.x - col;
+					if(dist == 0){
+						el.dataset.anim == '';
 					}
-				}	
-				//Move currChild?
-				for(var animEnd=4; animEnd>row; animEnd--){
-					if(!document.getElementById('c'+col+'r'+animEnd).firstChild){
-						destCell=document.getElementById('c'+col+'r'+animEnd);
-						moveCurr=1;
-						break;
+					else{
+						el.style.left = dist*113 +'px';
+						move=1;
 					}
 				}
-				moveImage(combo, moveCurr, currCell, destCell, secondCell);	
+				else if(el.dataset.anim == 'c'){
+					move=1;
+					el2 = el.nextSibling;
+					dist = el2.dataset.x - col;
+					el2.style.left = dist*113 + 'px';
+				}
 			}
 		}
-	}				
+	}
+}
+
+async function arrowDown(){
+	for(var col=1; col<=4; col++){
+	//read into secondary array
+		var i = 0;
+		secArr = [];
+		for(var row = 4; row>=1; row--){
+			if(document.getElementById('c'+col+'r'+row).firstChild){
+				currChild = document.getElementById('c'+col+'r'+row).firstChild;
+				secArr[i] = currChild;
+				document.getElementById('c'+col+'r'+row).removeChild(currChild);
+				i++;
+			}
+			
+		}
+		//find combos
+		findCombos(secArr);
+
+		row = 4;
+		//put back into cells
+		for(var i = 0; i<secArr.length; i++){
+			document.getElementById('c'+col+'r'+row).appendChild(secArr[i]);
+			if(secArr[i].dataset.anim == 'c'){
+				document.getElementById('c'+col+'r'+row).appendChild(secArr[i+1]);
+				i++;
+			}
+			row--;
+		}
+		//format properly
+		for(var row = 1; row<=4; row++){
+			if(el = document.getElementById('c'+col+'r'+row).firstChild){
+				if(el.dataset.anim == 'l'){
+					dist = el.dataset.y - row;
+					if(dist == 0){
+						el.dataset.anim == '';
+					}
+					else{
+						el.style.top = dist*113 +'px';
+						move = 1;
+					}
+				}
+				else if(el.dataset.anim == 'c'){
+					move = 1;
+					el2 = el.nextSibling;
+					dist = el2.dataset.y - row;
+					el2.style.top = dist*113 + 'px';
+				}
+			}
+		}
+	}
+}
+
+async function arrowUp(){
+	for(var col=1; col<=4; col++){
+	//read into secondary array
+		var i = 0;
+		secArr = [];
+		for(var row = 1; row<=4; row++){
+			if(document.getElementById('c'+col+'r'+row).firstChild){
+				currChild = document.getElementById('c'+col+'r'+row).firstChild;
+				secArr[i] = currChild;
+				document.getElementById('c'+col+'r'+row).removeChild(currChild);
+				i++;
+			}
+			
+		}
+		//find combos
+		findCombos(secArr);
+
+		row = 1;
+		//put back into cells
+		for(var i = 0; i<secArr.length; i++){
+			document.getElementById('c'+col+'r'+row).appendChild(secArr[i]);
+			if(secArr[i].dataset.anim == 'c'){
+				document.getElementById('c'+col+'r'+row).appendChild(secArr[i+1]);
+				i++;
+			}
+			row++;
+		}
+		//format properly
+		for(var row = 1; row<=4; row++){
+			if(el = document.getElementById('c'+col+'r'+row).firstChild){
+				if(el.dataset.anim == 'l'){
+					dist = el.dataset.y - row;
+					if(dist == 0){
+						el.dataset.anim == '';
+					}
+					else{
+						el.style.top = dist*113 +'px';
+						move = 1;
+					}
+				}
+				else if(el.dataset.anim == 'c'){
+					move = 1;
+					el2 = el.nextSibling;
+					dist = el2.dataset.y - row;
+					el2.style.top = dist*113 + 'px';
+				}
+			}
+		}
+	}
+}
+
+function findCombos(secArr){
+	for(var i = 0; i<secArr.length; i++){
+			if(i+1 < secArr.length && secArr[i].dataset.index == secArr[i+1].dataset.index){
+				secArr[i].dataset.anim = 'c';
+				secArr[i].style.zIndex = '2';
+				secArr[i+1].dataset.anim = 'l';
+				secArr[i+1].style.zIndex = '1';
+				i++;
+			}
+			else
+				secArr[i].dataset.anim = 'l';
+		}
 }
 
 function createImage(){
 	var col = Math.floor(Math.random() * 4 + 1);
 	var row = Math.floor(Math.random() * 4 + 1);
 	el = document.getElementById('c'+col+'r'+row);
+	
 	while(el.firstChild != null){
 		var col = Math.floor(Math.random() * 4 + 1);
 		var row = Math.floor(Math.random() * 4 + 1);
 		el = document.getElementById('c'+col+'r'+row);
 	}
+	
 	var img = document.createElement("img");
+	img.setAttribute('id', "img"+score);
+	score++;
 
 	if(Math.random()<.85){
 		img.src = img_src[0];
@@ -227,44 +334,122 @@ function createImage(){
 		img.src = img_src[1];
 		img.dataset.index = 1;
 	}
+	//alert("after select index");
+	img.dataset.x = col;
+	img.dataset.y = row;
+	img.dataset.anim = 'n';	
+	
+	img.style.top = "0px";
+	img.style.left = "0px";
+	img.style.transform = "scale(0)";
+
 	el.appendChild(img);
+
+	return img;
 
 }
 
-function moveImage(combo, moveCurr, currCell, destCell, secondCell){
-	if(combo==0 && moveCurr==1){
-		//to do make animation
-		currChild = currCell.firstChild;
-		currCell.removeChild(currChild);
-		destCell.appendChild(currChild);
-	}
-	else if(combo){
-		//to do animate secondChild
-		//alert("In combo");
-		currChild = currCell.firstChild;
-		secondChild = secondCell.firstChild;
-		secondCell.removeChild(secondChild);
-		currChild.dataset.index++;
-		currChild.src = img_src[currChild.dataset.index];
-		if(moveCurr){
-			currCell.removeChild(currChild);
-			destCell.appendChild(currChild);
+function create2(x, y, index){
+	el = document.getElementById('c'+x+'r'+y);
+	img = document.createElement('img');
+	img.dataset.x = x;
+	img.dataset.y = y;
+	img.dataset.index = index;
+	img.src = img_src[index];
+	el.appendChild(img);
+	return img;
+}
+
+async function moveImages(callback){
+	//alert("In move images");
+	if(move == 1) createImage();
+	//countChildren();
+	for(var row = 1; row<=4; row++){
+		for(var col = 1; col<=4; col++){
+			if(el = document.getElementById('c'+col+'r'+row).firstChild){
+				//alert(el + " x: " + el.dataset.x + " y: " + el.dataset.y);
+				if(el.dataset.anim=='c'){
+					el.dataset.index++;
+					el.src = img_src[el.dataset.index];
+					el2 = el.nextSibling;
+					el2.style.animation = "moveLeft2 1s 1 forwards";
+					el.style.transform = "scale(0)";
+					el.style.animation = "grow .16s 1 forwards";
+				}
+				else if(el.dataset.anim == 'n')
+					el.style.animation = "grow .16s 1 forwards";
+				else if(el.dataset.anim == 'l'){
+					el.style.animation = "moveLeft2 .16s 1 forwards";
+				}
+			}
 		}
-		//to do animate appearance
 	}
-	
+	//alert("before callback");
+	await sleep(160);
+	callback();
+
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+function notice(){
+	//alert("callback works");
+	for(var row = 1; row<=4; row++){
+		for(var col = 1; col<=4; col++){
+			//alert("notice row: " + row);
+			//alert("Notice col: " + col + " cell: " + document.getElementById('c'+col+'r'+row) + " first " + document.getElementById('c'+col+'r'+row).firstChild);
+			if(document.getElementById('c'+col+'r'+row).firstChild){
+				//alert("in if");
+				el = document.getElementById('c'+col+'r'+row).firstChild;
+				el.style.top = '0px';
+				el.style.left = '0px';
+				el.style.transform = "scale(1)";
+				el.style.animation = '';
+				el.style.zIndex = '1';
+				el.dataset.x = col;
+				el.dataset.y = row;
+				//alert(el.nextSibling);
+				if(el.nextSibling)
+					//alert("before second if: " + el.nextSibling);
+				if(el2 = el.nextSibling){
+					//alert("remove");
+					el2.parentElement.removeChild(el2);
+				}
+			}
+		}
+		//countChildren();
+	}
+
+}
+
+function countChildren(){
+	//el = document.getElementById(id);
+	txt = '';
+	col = 1;
+	for(var row = 1; row<=4; row++){
+		el = document.getElementById('c'+col+'r'+row);
+		childArr = el.childNodes;
+		for(var i = 0; i<childArr.length; i++)
+			txt += "col: " + col + "row: " + row + " i: " + i + " " + childArr[i] + " anim: " + childArr[i].dataset.anim + " index: " + childArr[i].dataset.index + " Id: " + childArr[i].id + '\n';
+	}
+	alert(txt);
 }
 
 function isBoardFull(){
 	boardFull=1;
-	for(row=1; row<=4; row++){
+	row = 1;
+	//for(row=1; row<=4; row++){
+		row = 1;
 		for(col=1; col<=4; col++){
 			if(document.getElementById('c'+col+'r'+row).firstChild==null){
 				boardFull = 0;
 				break;
 			}
 		}
-	}
+	//}
 	return boardFull;
 }
 
@@ -287,23 +472,11 @@ function gotMove(){
 			col1 = col + 1;
 			nextChild = document.getElementById('c'+col1+'r'+row).firstChild;
 			if(currChild.dataset.index == nextChild.dataset.index){
-				alert("row: got move");
 				return 1;
 			}
 		}
 	}
 	return 0;
 	
-}
-
-function show_image(src, width, height, alt) {
-    var img = document.createElement("img");
-    img.src = src;
-    img.width = width;
-    img.height = height;
-    img.alt = alt;
-
-    // This next line will just add it to the <body> tag
-    document.body.appendChild(img);
 }
 

@@ -1,3 +1,9 @@
+:root {
+	--animation-duration: 1s;
+	--startY: 1000px;
+	--startX: 1000px;
+}
+
 body {
   height: 100vh;
   width: 100vw;
@@ -8,20 +14,21 @@ body {
 }
 
 table{
-	left: 300px;
+	//left: 300px;
 }
 
 table, tr, td{
-	border: 13px solid Grey;
+	border: 16px solid Grey;
 	border-collapse: collapse;
 }
 
 tr{
-	height: 112px;
+	height: 113px;
 }
 td {
 	height: 100px;
 	width: 100px;
+	position: relative;
 }
 
 table{
@@ -30,16 +37,68 @@ table{
 	margin-top: -100px;
 }
 
-
-
 img{
 	width: 100px;
 	height: 100px;
+	top: 0px;
+	left: 0px;
+	position: absolute;
+
+}
+.cont{
+	top: 0px;
+	left: 0px;
+	position: absolute;
 }
 
-#game2{
-	background-color: Blue;
-	left: 500px;
-	top: 300px;
-	
+/*Animations*/
+
+@keyframes moveRight{
+	from{left: 0px;}
+	to {left: 200px;}
 }
+
+@keyframes moveLeft{
+	from{left: 0px;}
+	to {left: 50px;}
+}
+
+@keyframes moveLeft2{
+	to{left: 0px; top: 0px;}
+}
+
+@keyframes grow{
+	to{transform: scale(1);}
+}
+
+@keyframes moveDown{
+	from{top: 0px}
+	to {top: 200px;}
+}
+
+@keyframes moveUp{
+	from{top: 0px;}
+	to{top: -200px;}
+}
+
+
+/*.moveLeft1{
+	animation: moveLeft var(--animation-duration) forwards ease-out;
+}
+
+.moveLeft2{
+	animation: moveLeft 1s forwards ease-out;
+}
+
+.moveDown{
+	animation: moveDown var(--animation-duration) forwards ease-out;
+}
+
+.moveUp{
+	animation: moveUp var(--animation-duration) forwards ease-out;
+}
+
+.moveRight{
+	animation: moveRight var(--animation-duration) forwards ease-out;
+}*/
+
