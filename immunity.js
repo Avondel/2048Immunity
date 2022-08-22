@@ -460,7 +460,6 @@ function gotMove(){
 			row1 = row + 1;
 			nextChild = document.getElementById('c'+col+'r'+row1).firstChild;
 			if(currChild.dataset.index == nextChild.dataset.index){
-				alert("col: Got move");
 				return 1;
 			}
 		}
