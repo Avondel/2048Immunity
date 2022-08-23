@@ -9,6 +9,12 @@ var secArr = [];
 
 document.addEventListener("keydown",play2048);
 
+function tempTest(){
+	container.addEventListener("touchstart", dragStart, false);
+    container.addEventListener("touchend", dragEnd, false);
+    container.addEventListener("touchmove", drag, false);
+}
+
 async function init(){
 	score = 0;
 	playGame = true;
